@@ -1,0 +1,51 @@
+# Render Blueprint for AInsight.
+#
+# This pins exactly what Render otherwise has to guess:
+#   - which Python version to build with. Render's precedence (highest first)
+#     is: the PYTHON_VERSION env var below > a .python-version file in the
+#     repo root (also included here) > Render's own default for new services
+#     (3.14.3 as of Feb 2026 — this is what broke the build: pydantic-core
+#     has no prebuilt wheel for 3.14, and Render's build container has no
+#     writable Rust/cargo cache, so the source-build fallback fails too).
+#     runtime.txt is NOT a supported mechanism on Render despite being common
+#     on other PaaS platforms — it is silently ignored.
+#   - the build and start commands
+#   - the health check path Render polls to decide the deploy is live
+#
+# To use: push this file (and .python-version) to the repo connected to
+# Render. For an EXISTING service (not created from this Blueprint), setting
+# PYTHON_VERSION in the dashboard's Environment tab takes effect immediately
+# on the next manual deploy — don't rely on the file alone. For a fresh
+# service, use "New +" -> "Blueprint" and point it at this repo.
+services:
+  - type: web
+    name: ainsight
+    runtime: python
+    plan: free
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    # gunicorn, not `python app.py`: the Flask dev server used by `python app.py`
+    # is single-process and not meant for production traffic. `wsgi:app`, not
+    # `app:app` — the project has both app.py and an app/ package, so a bare
+    # `import app` resolves to the package, not the file, and gunicorn can't
+    # find the `app` object. wsgi.py loads app.py directly to avoid that.
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DEBUG
+        value: "false"
+      - key: RELOADER
+        value: "false"
+      # Set these in the Render dashboard (Environment tab), not here —
+      # never commit real API keys or secrets to the repo.
+      - key: LLM_PROVIDER
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true

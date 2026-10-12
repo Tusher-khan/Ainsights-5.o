@@ -1,0 +1,42 @@
+# AInsight — AI-Powered Business Analytics
+# Python 3.11+
+
+# --- core web stack ---------------------------------------------------------
+Flask==3.0.3
+Werkzeug==3.0.3
+python-dotenv==1.0.1
+
+# --- data processing --------------------------------------------------------
+pandas>=2.2.3
+numpy
+openpyxl==3.1.5          # Excel (.xlsx) reading and writing
+XlsxWriter==3.2.0        # Excel result downloads
+chardet==5.2.0           # CSV encoding detection
+
+# --- structured output validation -------------------------------------------
+pydantic==2.8.2          # falls back to app/core/schema.py if unavailable
+
+# --- SQL safety -------------------------------------------------------------
+sqlglot==25.5.1          # AST-level validation of generated SQL
+
+# --- AI orchestration -------------------------------------------------------
+langchain>=0.3.0
+langchain-core>=0.3.0
+langgraph>=0.2.0
+requests==2.32.3
+tenacity==8.5.0         # retry policy
+
+# --- RAG --------------------------------------------------------------------
+chromadb          # falls back to the local cosine store
+scikit-learn      # TF-IDF embedding backend
+
+# --- testing ----------------------------------------------------------------
+pytest==8.3.2
+
+# Optional, for higher-quality embeddings (large download):
+sentence-transformers==3.0.1
+
+# Optional, for PostgreSQL instead of SQLite:
+psycopg[binary]>=3.2.2
+# --- production server ------------------------------------------------------
+gunicorn==22.0.0
